@@ -9,10 +9,19 @@ generates a launcher that drops you straight into a Mint shell.
 
 ## Why this exists
 
-Linux Mint ships **no official ARM image**, and phones are ARM. So instead of
-a Mint ISO, this pulls Mint from the **LXC community image server**, which
-builds Mint for both `arm64` and `amd64`. That's the whole trick — a real Mint
-rootfs your phone's CPU can run natively.
+Linux Mint ships **no ARM build at all** — not an ISO, and not a rootfs on the
+LXC image server, where Mint is **amd64-only**. Phones are arm64. So:
+
+- **amd64 target** → a real Linux Mint rootfs, straight from the image server.
+- **arm64 target** (phones) → the scripts fall back to **Ubuntu 24.04 (noble)**,
+  which *is* built for arm64 and is the exact base Mint 22 is made from. Run
+  [`mintify.sh`](mintify.sh) inside the container to add Cinnamon + the Mint-Y
+  themes on top. That's "Mint on ARM" done honestly: same base, same desktop,
+  native speed — no x86 emulation.
+
+Want the genuine Mint amd64 bits on a phone anyway? Only workable if your
+DroidSpaces container emulates x86, and it'll be slow — pack with
+`--arch amd64` and skip `mintify.sh`.
 
 ## Two ways to use it
 

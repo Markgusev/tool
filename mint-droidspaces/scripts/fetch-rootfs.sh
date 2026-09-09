@@ -8,11 +8,13 @@
 #     ROOTFS_URL  -> full URL of rootfs.tar.xz
 #     SUMS_URL    -> full URL of the matching SHA256SUMS
 resolve_rootfs_url() {
-    _base="$IMAGE_SERVER/images/mint/$MINT_RELEASE/$LXC_ARCH/$IMAGE_VARIANT"
+    _distro="${SRC_DISTRO:-mint}"
+    _release="${SRC_RELEASE:-$MINT_RELEASE}"
+    _base="$IMAGE_SERVER/images/$_distro/$_release/$LXC_ARCH/$IMAGE_VARIANT"
     info "querying image index: $_base/"
 
     _index="$(dl "$_base/" || true)"
-    [ -n "$_index" ] || die "no image index for mint/$MINT_RELEASE/$LXC_ARCH — wrong release or arch not built?"
+    [ -n "$_index" ] || die "no image index for $_distro/$_release/$LXC_ARCH — wrong release or arch not built?"
 
     # Build folders are named YYYYMMDD_HH:MM. Newest wins.
     _stamp="$(printf '%s\n' "$_index" \
@@ -22,7 +24,7 @@ resolve_rootfs_url() {
 
     ROOTFS_URL="$_base/$_stamp/rootfs.tar.xz"
     SUMS_URL="$_base/$_stamp/SHA256SUMS"
-    info "selected build $_stamp for mint/$MINT_RELEASE/$LXC_ARCH"
+    info "selected build $_stamp for $_distro/$_release/$LXC_ARCH"
 }
 
 # fetch_and_verify <dest_dir>

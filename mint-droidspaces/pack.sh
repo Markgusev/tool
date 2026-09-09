@@ -27,6 +27,7 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --release)   MINT_RELEASE="$2"; shift 2 ;;
         --arch)      FORCE_ARCH="$2";   shift 2 ;;
+        --distro)    DISTRO="$2";       shift 2 ;;
         -o|--output) OUT="$2";          shift 2 ;;
         -h|--help)   sed -n '2,17p' "$0"; exit 0 ;;
         *) die "unknown option: $1" ;;
@@ -37,11 +38,13 @@ detect_arch
 # The arch must match the DroidSpaces CONTAINER, not the machine building
 # the tarball. On a phone that's almost always arm64.
 [ -n "$FORCE_ARCH" ] && LXC_ARCH="$FORCE_ARCH"
+# Mint is amd64-only upstream; on arm64 this swaps in Ubuntu noble (Mint's base).
+pick_source
 
 have gzip || die "need 'gzip' to write the .tar.gz"
 have xz   || die "need 'xz' to decompress the source rootfs (macOS: brew install xz)"
 
-[ -n "$OUT" ] || OUT="mint-${MINT_RELEASE}-${LXC_ARCH}.tar.gz"
+[ -n "$OUT" ] || OUT="${SRC_DISTRO}-${SRC_RELEASE}-${LXC_ARCH}.tar.gz"
 
 resolve_rootfs_url
 fetch_and_verify "$INSTALL_DIR/.cache"
@@ -60,7 +63,15 @@ cat <<DONE
     Move $OUT to your phone, then in DroidSpaces choose "import rootfs"
     (or equivalent) and point it at this file.
 
-  Arch packed: $LXC_ARCH  — must match your DroidSpaces container.
+  Packed: $SRC_DISTRO/$SRC_RELEASE ($LXC_ARCH) — arch must match your container.
   If DroidSpaces rejects it, re-pack with the other arch: --arch amd64
-
 DONE
+if [ "$SRC_DISTRO" != "mint" ]; then
+cat <<MINTIFY
+
+  This is the Ubuntu base (Mint has no $LXC_ARCH build). To make it
+  Mint-flavoured, copy mintify.sh into the container and run it as root:
+      ./mintify.sh              # Cinnamon + Mint themes/tools
+      ./mintify.sh --cli        # skip the desktop, just Mint CLI bits
+MINTIFY
+fi

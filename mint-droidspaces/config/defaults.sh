@@ -24,6 +24,11 @@
 # Image variant on the server. 'default' is the minimal rootfs.
 : "${IMAGE_VARIANT:=default}"
 
+# Source distro. 'mint' is the intent, but Mint is amd64-only on the image
+# server — on arm64 the scripts fall back to Ubuntu noble (Mint 22's base)
+# automatically. Set to 'ubuntu' or 'debian' to force a base explicitly.
+: "${DISTRO:=mint}"
+
 # DNS written into the guest's /etc/resolv.conf. Android hides the real
 # resolv.conf from unprivileged apps, so we hardcode a resolver.
 : "${GUEST_DNS:=8.8.8.8}"

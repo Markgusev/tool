@@ -27,6 +27,7 @@ while [ $# -gt 0 ]; do
         --dir)     INSTALL_DIR="$2";  shift 2 ;;
         --backend) BACKEND="$2";      shift 2 ;;
         --arch)    FORCE_ARCH="$2";   shift 2 ;;
+        --distro)  DISTRO="$2";       shift 2 ;;
         -h|--help)
             sed -n '2,20p' "$0"; exit 0 ;;
         *) die "unknown option: $1" ;;
@@ -37,6 +38,8 @@ done
 
 detect_arch
 [ -n "$FORCE_ARCH" ] && LXC_ARCH="$FORCE_ARCH"
+# Mint is amd64-only upstream; on arm64 this swaps in Ubuntu noble (Mint's base).
+pick_source
 
 have tar || die "need 'tar' to extract the rootfs"
 have xz  || warn "'xz' not found — tar may still handle .xz via liblzma; continuing"
@@ -170,7 +173,7 @@ chmod +x "$LAUNCHER"
 
 # ---- done --------------------------------------------------------------
 
-ok "Linux Mint ($MINT_RELEASE, $LXC_ARCH) installed at $ROOTFS"
+ok "$SRC_DISTRO/$SRC_RELEASE ($LXC_ARCH) installed at $ROOTFS"
 cat <<DONE
 
   Start it:            $LAUNCHER

@@ -36,6 +36,25 @@ detect_arch() {
     esac
 }
 
+# ---- source selection --------------------------------------------------
+
+# Picks a rootfs source that actually exists for the target arch and sets
+# SRC_DISTRO / SRC_RELEASE. Linux Mint is built only for amd64 on the image
+# server, so on any other arch we fall back to Ubuntu 24.04 (noble) — the
+# exact base Mint 22 is built on — and leave the Mint desktop bits to
+# mintify.sh. Call after detect_arch (and after any --arch override).
+pick_source() {
+    SRC_DISTRO="${DISTRO:-mint}"
+    SRC_RELEASE="${MINT_RELEASE}"
+    if [ "$SRC_DISTRO" = "mint" ] && [ "$LXC_ARCH" != "amd64" ]; then
+        warn "Linux Mint has no $LXC_ARCH build on the image server (amd64-only)."
+        warn "Falling back to Ubuntu noble ($LXC_ARCH) — Mint 22's own base."
+        warn "Turn it Mint-flavoured later: run  ./mintify.sh  inside the container."
+        SRC_DISTRO="ubuntu"; SRC_RELEASE="noble"
+    fi
+    info "source: $SRC_DISTRO/$SRC_RELEASE/$LXC_ARCH"
+}
+
 # ---- download ----------------------------------------------------------
 
 # dl <url> [outfile]   — curl or wget, with retries. No outfile => stdout.
