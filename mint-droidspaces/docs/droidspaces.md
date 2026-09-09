@@ -1,8 +1,33 @@
 # Running mint-droidspaces inside DroidSpaces
 
-DroidSpaces is an Android app-virtualization / sandbox environment. There are
-two ways a sandbox like this exposes a Linux userspace, and the launcher
-supports both — you just need to know which one you have.
+## The DroidSpaces way: import a rootfs .tar.gz
+
+DroidSpaces runs a real container off the kernel with root, and imports its
+guest as a **rootfs `.tar.gz`** — it builds and manages the container itself,
+handling mounts and networking. So the clean path is: build the tarball, then
+import it.
+
+```sh
+./pack.sh --arch arm64        # -> mint-wilma-arm64.tar.gz
+```
+
+Run `pack.sh` on any machine with network + `curl`/`xz`/`gzip` (your Mac needs
+`brew install xz`; Termux has it). Copy the resulting `.tar.gz` to your phone
+and use DroidSpaces' "import rootfs". `--arch` must match the DroidSpaces
+container arch (a phone container is almost always `arm64`).
+
+Because DroidSpaces owns the container, you do **not** run `install.sh`,
+`start.sh`, proot, or chroot yourself in this mode — it's all handled once the
+rootfs is imported. The rest of this doc covers the alternate "I have a bare
+Linux shell" path.
+
+---
+
+## Alternate path: bootstrap in an existing shell
+
+If instead you're dropped into a plain Linux shell (Termux, some other
+container) and want to set Mint up in place, `install.sh` supports two ways to
+expose the userspace — you just need to know which one you have.
 
 ## Which backend do I have?
 

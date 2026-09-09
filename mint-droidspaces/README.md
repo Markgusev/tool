@@ -14,16 +14,32 @@ a Mint ISO, this pulls Mint from the **LXC community image server**, which
 builds Mint for both `arm64` and `amd64`. That's the whole trick — a real Mint
 rootfs your phone's CPU can run natively.
 
-## Quick start
+## Two ways to use it
+
+**A. DroidSpaces imports a rootfs `.tar.gz`** (the usual DroidSpaces flow —
+it builds the container for you). Make the tarball on any networked machine
+(your Mac, Termux, any Linux box), then import it:
 
 ```sh
 git clone <this-repo> mint-droidspaces && cd mint-droidspaces
+chmod +x pack.sh
+./pack.sh --arch arm64        # -> mint-wilma-arm64.tar.gz
+# move that file to your phone, then in DroidSpaces: "import rootfs"
+```
+
+`--arch` must match your DroidSpaces **container**, not the machine building
+the tarball — on a phone that's almost always `arm64`.
+
+**B. You already have a Linux shell** (Termux, a rooted container, a real VM)
+and want the whole thing set up in place:
+
+```sh
 chmod +x install.sh
 ./install.sh          # detect arch + backend, download, build launcher
 ./start.sh            # enter Mint
 ```
 
-Inside Mint:
+Either way, first thing inside Mint:
 
 ```sh
 apt update && apt -y upgrade
@@ -74,7 +90,8 @@ Not sure which DroidSpaces gives you? See [`docs/droidspaces.md`](docs/droidspac
 ## Layout
 
 ```
-install.sh              main installer (generates start.sh)
+pack.sh                 build a Mint rootfs .tar.gz for DroidSpaces import
+install.sh              in-place installer (generates start.sh)
 config/defaults.sh      tunables (release, dir, dns, backend)
 scripts/common.sh       logging, arch detection, download + sha256
 scripts/fetch-rootfs.sh resolves + downloads the newest rootfs
