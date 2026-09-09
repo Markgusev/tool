@@ -1,0 +1,6 @@
+# Installed rootfs / downloads never belong in git.
+rootfs/
+.cache/
+start.sh
+*.tar.xz
+*.tar.gz
