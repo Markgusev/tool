@@ -27,12 +27,37 @@ add-apt-repository -y universe || true
 apt update -y
 
 echo "[*] base tools..."
-apt install -y sudo nano curl wget less locales neofetch
+apt install -y sudo nano curl wget less locales neofetch git
 
-# Mint theme packages live in Ubuntu universe and are arch-independent.
-echo "[*] Mint look (themes/icons)..."
-apt install -y mint-y-icons mint-themes 2>/dev/null || \
-    echo "[!] mint-y-icons/mint-themes not in this repo — skipping theming"
+echo "[*] rebranding to Linux Mint..."
+cat > /etc/os-release <<'EOF'
+NAME="Linux Mint"
+VERSION="22 (Wilma)"
+ID=linuxmint
+ID_LIKE=ubuntu
+PRETTY_NAME="Linux Mint 22"
+VERSION_ID="22"
+VERSION_CODENAME=wilma
+UBUNTU_CODENAME=noble
+HOME_URL="https://www.linuxmint.com/"
+EOF
+cat > /etc/lsb-release <<'EOF'
+DISTRIB_ID=LinuxMint
+DISTRIB_RELEASE=22
+DISTRIB_CODENAME=wilma
+DISTRIB_DESCRIPTION="Linux Mint 22 Wilma"
+EOF
+printf 'Linux Mint 22 Wilma \\n \\l\n' > /etc/issue
+
+# Mint's own theme/icon repos are just data (Architecture: all), so they
+# install fine on arm64 — unlike the amd64-only apt packages of the same
+# name. Pull them straight from source.
+echo "[*] Mint-Y themes + icons (from git, arch-independent)..."
+git clone --depth 1 https://github.com/linuxmint/mint-themes.git /tmp/mint-themes \
+    && cp -r /tmp/mint-themes/usr/share/themes/* /usr/share/themes/ 2>/dev/null || true
+git clone --depth 1 https://github.com/linuxmint/mint-y-icons.git /tmp/mint-y-icons \
+    && cp -r /tmp/mint-y-icons/usr/share/icons/* /usr/share/icons/ 2>/dev/null || true
+rm -rf /tmp/mint-themes /tmp/mint-y-icons
 
 if [ "$MODE" = "full" ]; then
     echo "[*] Cinnamon desktop (this one's big)..."
@@ -49,4 +74,4 @@ if [ "$MODE" = "full" ]; then
 NOTE
 fi
 
-echo "[+] mintified ($MODE). base is Ubuntu $(. /etc/os-release; echo "$VERSION_ID"), Mint-flavoured."
+echo "[+] mintified ($MODE). now reports as $(. /etc/os-release; echo "$PRETTY_NAME") (Ubuntu noble base)."
