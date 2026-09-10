@@ -45,15 +45,25 @@ have xz   || die "need 'xz' to decompress the source rootfs (macOS: brew install
 resolve_rootfs_url
 fetch_and_verify "$INSTALL_DIR/.cache"
 
-info "recompressing rootfs .xz -> .gz ..."
-xz -dc "$ROOTFS_TARBALL" | gzip -c > "$OUT"
+info "recompressing rootfs .xz -> .gz (+baking in cachyfy.sh)..."
+# Bake cachyfy.sh into /root of the rootfs so it's already there after import
+# — no need to clone a private repo inside a bare Arch container. Decompress
+# to a plain tar, append the file, then gzip. -r works on GNU tar and bsdtar.
+_tar="$INSTALL_DIR/.cache/rootfs.tar"
+xz -dc "$ROOTFS_TARBALL" > "$_tar"
+_stage="$INSTALL_DIR/.cache/inject"; rm -rf "$_stage"; mkdir -p "$_stage/root"
+cp "$HERE/cachyfy.sh" "$_stage/root/cachyfy.sh"; chmod +x "$_stage/root/cachyfy.sh"
+tar -rf "$_tar" -C "$_stage" root
+gzip -c "$_tar" > "$OUT"
+rm -f "$_tar"; rm -rf "$_stage"
 
 _size="$(du -h "$OUT" 2>/dev/null | awk '{print $1}')"
 ok "wrote $OUT (${_size:-?})"
 cat <<DONE
 
   Import it into DroidSpaces ("import rootfs"), then inside the container,
-  as root, turn Arch into CachyOS:
+  as root (cachyfy.sh is already baked into /root — no cloning needed):
+      cd /root
       ./cachyfy.sh              # brand + tuning + base tools
       ./cachyfy.sh --desktop    # also KDE Plasma (needs VNC to see it)
 

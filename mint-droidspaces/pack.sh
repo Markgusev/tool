@@ -49,11 +49,17 @@ have xz   || die "need 'xz' to decompress the source rootfs (macOS: brew install
 resolve_rootfs_url
 fetch_and_verify "$INSTALL_DIR/.cache"
 
-# Stream xz -> gz so we never hold a full uncompressed tar on disk. The tar
-# payload is untouched (LXC rootfs at top level, exactly what an importer
-# expects) — only the outer compression changes from .xz to .gz.
-info "recompressing rootfs .xz -> .gz ..."
-xz -dc "$ROOTFS_TARBALL" | gzip -c > "$OUT"
+# Bake mintify.sh into /root of the rootfs so it's already there after import
+# — no need to clone a private repo inside the container. Decompress to a
+# plain tar, append the file, then gzip. -r works on GNU tar and bsdtar.
+info "recompressing rootfs .xz -> .gz (+baking in mintify.sh)..."
+_tar="$INSTALL_DIR/.cache/rootfs.tar"
+xz -dc "$ROOTFS_TARBALL" > "$_tar"
+_stage="$INSTALL_DIR/.cache/inject"; rm -rf "$_stage"; mkdir -p "$_stage/root"
+cp "$HERE/mintify.sh" "$_stage/root/mintify.sh"; chmod +x "$_stage/root/mintify.sh"
+tar -rf "$_tar" -C "$_stage" root
+gzip -c "$_tar" > "$OUT"
+rm -f "$_tar"; rm -rf "$_stage"
 
 _size="$(du -h "$OUT" 2>/dev/null | awk '{print $1}')"
 ok "wrote $OUT (${_size:-?})"
@@ -69,8 +75,9 @@ DONE
 if [ "$SRC_DISTRO" != "mint" ]; then
 cat <<MINTIFY
 
-  This is the Ubuntu base (Mint has no $LXC_ARCH build). To make it
-  Mint-flavoured, copy mintify.sh into the container and run it as root:
+  This is the Ubuntu base (Mint has no $LXC_ARCH build). mintify.sh is baked
+  into /root — inside the container, as root:
+      cd /root
       ./mintify.sh              # Cinnamon + Mint themes/tools
       ./mintify.sh --cli        # skip the desktop, just Mint CLI bits
 MINTIFY
