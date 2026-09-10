@@ -1,0 +1,5 @@
+rootfs/
+.cache/
+start.sh
+*.tar.xz
+*.tar.gz
