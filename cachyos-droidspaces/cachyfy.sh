@@ -50,8 +50,9 @@ pacman -Syu --noconfirm
 # ---- base tools -------------------------------------------------------
 
 log "base tools..."
+# neofetch was removed from the Arch repos in 2024 — fastfetch replaces it.
 pacman -S --noconfirm --needed \
-    base-devel git sudo nano vi neofetch wget curl which less
+    base-devel git sudo nano vi fastfetch wget curl which less
 # Nice-to-haves; don't abort if a package is missing for this arch.
 pacman -S --noconfirm --needed zram-generator reflector htop 2>/dev/null || true
 
@@ -138,7 +139,7 @@ fi
 
 # ---- summary ----------------------------------------------------------
 
-neofetch 2>/dev/null || true
+fastfetch 2>/dev/null || true
 cat <<'DONE'
 
 [+] cachyfied. It reports as CachyOS (Arch ARM base), fully updated, with
