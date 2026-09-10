@@ -23,6 +23,15 @@ command -v pacman >/dev/null 2>&1 || { echo "this isn't an Arch base" >&2; exit 
 
 log() { printf '\033[34m[*]\033[0m %s\n' "$*"; }
 
+# ---- disable pacman download sandbox ----------------------------------
+
+# pacman 7 sandboxes downloads with Landlock + an 'alpm' user. Container
+# host kernels usually lack Landlock and the user switch fails, breaking
+# every -Sy. Turn the sandbox off — safe here, the container is the boundary.
+log "disabling pacman download sandbox (no Landlock in a container)..."
+sed -i 's/^[[:space:]]*DownloadUser/#DownloadUser/' /etc/pacman.conf
+grep -q '^DisableSandbox' /etc/pacman.conf || sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf
+
 # ---- keyring + full update --------------------------------------------
 
 log "initialising pacman keyring..."
@@ -67,6 +76,8 @@ printf 'CachyOS \\r (\\l)\n' > /etc/issue
 
 log "tuning makepkg (native arch, all cores, LTO)..."
 # Appended overrides win because makepkg.conf is sourced top-to-bottom.
+# Guard against duplicate blocks on a re-run.
+if ! grep -q 'cachyfy: CachyOS-style build optimization' /etc/makepkg.conf; then
 cat >> /etc/makepkg.conf <<'EOF'
 
 # --- cachyfy: CachyOS-style build optimization ---
@@ -78,6 +89,7 @@ LTOFLAGS="-flto=auto"
 OPTIONS+=(lto)
 COMPRESSZST=(zstd -c -T0 -19 -)
 EOF
+fi
 
 # ---- CachyOS sysctl + zram (applied where the container permits) ------
 
